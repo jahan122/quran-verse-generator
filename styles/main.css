@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef&family=Harmattan:wght@400;700&family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -33,6 +33,62 @@
   --color-islamic-950: #10211e;
 }
 
+/* Light Theme Overrides */
+body.light-theme {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+body.light-theme header {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: #e2e8f0;
+}
+
+body.light-theme aside section,
+body.light-theme main > div:first-of-type,
+body.light-theme main section {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+body.light-theme select,
+body.light-theme input {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+body.light-theme #themeToggle {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+body.light-theme footer {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: #e2e8f0;
+}
+
+body.light-theme .text-slate-400,
+body.light-theme .text-slate-500 {
+  color: #64748b;
+}
+
+body.light-theme .text-slate-200,
+body.light-theme .text-slate-300 {
+  color: #334155;
+}
+
+body.light-theme #previewWorkspace .bg-slate-950 {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme #previewWorkspace .bg-slate-900\/60 {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: #e2e8f0;
+}
+
 /* Custom styles for professional scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -59,41 +115,18 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Decorative Border & Vignette */
-.premium-vignette {
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
-}
-
 .islamic-pattern-bg {
   background-image: radial-gradient(rgba(226, 168, 45, 0.1) 1px, transparent 0);
   background-size: 24px 24px;
 }
 
-/* Shimmer animation for pending status */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-shimmer {
   background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite linear;
-}
-
-@keyframes gradient-x {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.animate-gradient-x {
-  animation: gradient-x 15s ease infinite;
 }
