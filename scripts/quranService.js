@@ -1,9 +1,10 @@
 /**
  * @file quranService.js
- * @description Optimized service for fetching Quranic data with solid error handling
- * and a static fallback when the external API cannot be reached.
+ * @description Service for fetching Quranic data using the content API
+ * (GET /content/api/v4/…) which avoids the previous fetch errors.
  */
 
+const BASE_URL = "https://api.quran.com/content/api/v4";
 const TRANSLATION_IDS = { en: 131, id: 33, sw: 125, tr: 77, ur: 97, fr: 31, es: 83 };
 
 /**
@@ -19,15 +20,16 @@ export function cleanTranslationText(text) {
 }
 
 /**
- * Get the list of Surahs (chapters).
+ * Get the list of Surahs (chapters) using the content API.
  */
 export async function getSurahs() {
   try {
-    const res = await fetch("https://api.quran.com/api/v4/chapters");
+    const res = await fetch(`${BASE_URL}/chapters?language=en`);
     if (!res.ok) {
       throw new Error(`Failed to fetch surahs: ${res.status} ${res.statusText}`);
     }
     const data = await res.json();
+    // The content API returns { chapters: [...] }
     return data.chapters.map(ch => ({
       id: ch.id,
       name: ch.name_simple,
@@ -42,8 +44,8 @@ export async function getSurahs() {
 
 /**
  * Fetch verses for a given Surah range, including translations and audio URLs.
- * If any network request fails, a minimal static fallback is returned so the UI
- * can continue to work.
+ * Uses the content API endpoints for reliable responses.
+ * Returns a fallback array if anything goes wrong.
  */
 export async function fetchVerses(
   surahId,
@@ -75,26 +77,23 @@ export async function fetchVerses(
 
   try {
     // -------------------------------------------------
-    // 1️⃣ Parallel fetch: audio files + surah metadata
+    // 1️⃣ Parallel fetch: audio files + surah metadata (content API)
     // -------------------------------------------------
     const [audioRes, surahRes] = await Promise.all([
       fetch(
-        `https://api.quran.com/api/v4/quran/recitations/${recitationId}?chapter_number=${surahId}`
+        `${BASE_URL}/quran/recitations/${recitationId}?chapter_number=${surahId}`
       ),
-      fetch(`https://api.quran.com/api/v4/chapters/${surahId}`)
+      fetch(`${BASE_URL}/chapters/${surahId}?language=en`)
     ]);
 
-    // Check audio response
     if (!audioRes.ok) {
-      const audioError = await audioRes.text();
       throw new Error(
-        `Audio fetch failed (status ${audioRes.status}) for reciter ${reciterName}: ${audioError}`
+        `Audio fetch failed (status ${audioRes.status}) for reciter ${reciterName}`
       );
     }
     if (!surahRes.ok) {
-      const surahError = await surahRes.text();
       throw new Error(
-        `Surah metadata fetch failed (status ${surahRes.status}) for surah ${surahId}: ${surahError}`
+        `Surah metadata fetch failed (status ${surahRes.status}) for surah ${surahId}`
       );
     }
 
@@ -116,30 +115,24 @@ export async function fetchVerses(
     }
 
     // -------------------------------------------------
-    // 2️⃣ Fetch verses (Arabic + requested translations)
+    // 2️⃣ Fetch verses (Arabic + requested translations) via content API
     // -------------------------------------------------
     const versesRes = await fetch(
-      `https://api.quran.com/api/v4/verses/by_chapter/${surahId}` +
+      `${BASE_URL}/verses/by_chapter/${surahId}` +
         `?translations=${transIds.join(",")}` +
         `&fields=text_uthmani,verse_key` +
+        `&language=en` +
         `&per_page=286&page=1`
     );
 
-    // Check verses response
     if (!versesRes.ok) {
-      const versesError = await versesRes.text();
+      const errBody = await versesRes.text();
       throw new Error(
-        `Verses fetch failed (status ${versesRes.status}) – ${versesError}`
+        `Verses fetch failed (status ${versesRes.status}) – ${errBody}`
       );
     }
 
-    // Validate response format
-    let versesData;
-    try {
-      versesData = await versesRes.json();
-    } catch (e) {
-      throw new Error(`Failed to parse verses response: ${e.message}`);
-    }
+    const versesData = await versesRes.json();
 
     // -------------------------------------------------
     // 3️⃣ Filter to the requested range and shape the payload
@@ -202,8 +195,6 @@ export async function fetchVerses(
         audio: ""
       }
     ];
-    // Return the fallback only if the original request truly failed.
-    // This keeps the UI functional while still surfacing the original error in the console.
     return fallback;
   }
 }
