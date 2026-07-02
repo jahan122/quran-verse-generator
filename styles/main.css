@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Amiri", Georgia, serif;
+  --font-kufi: "Reem Kufi", sans-serif;
+  --font-scheherazade: "Scheherazade New", serif;
+  --font-display: "Cinzel", serif;
+
+  --color-gold-50: #fefcf0;
+  --color-gold-100: #fdf5df;
+  --color-gold-200: #faf1be;
+  --color-gold-300: #f4dc89;
+  --color-gold-400: #ebc153;
+  --color-gold-500: #e2a82d;
+  --color-gold-600: #ca8820;
+  --color-gold-700: #a7651b;
+  --color-gold-800: #884e1b;
+  --color-gold-900: #71401a;
+  --color-gold-950: #42210b;
+
+  --color-islamic-50: #f1f8f5;
+  --color-islamic-100: #deeee6;
+  --color-islamic-200: #bddcd0;
+  --color-islamic-300: #90c2b2;
+  --color-islamic-400: #62a492;
+  --color-islamic-500: #448877;
+  --color-islamic-600: #336d5f;
+  --color-islamic-700: #29574d;
+  --color-islamic-800: #23473f;
+  --color-islamic-900: #1f3c36;
+  --color-islamic-950: #10211e;
+}
+
+/* Custom styles for professional scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-islamic-700);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-600);
+}
+
+/* Premium Gold Text Gradient */
+.gold-text-gradient {
+  background: linear-gradient(135deg, #fdf5df 0%, #e2a82d 50%, #ca8820 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Decorative Border & Vignette */
+.premium-vignette {
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+}
+
+.islamic-pattern-bg {
+  background-image: radial-gradient(rgba(226, 168, 45, 0.1) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Shimmer animation for pending status */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 15s ease infinite;
+}

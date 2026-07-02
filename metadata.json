@@ -1,0 +1,6 @@
+{
+  "name": "Quran Verse Image-Video Generator",
+  "description": "A frontend-only Quran Verse Image and Video Generator supporting customizable backgrounds, translation overlays, and media exporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

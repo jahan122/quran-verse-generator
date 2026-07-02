@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Al-Bayan — Quran Verse Image & Video Studio</title>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col islamic-pattern-bg selection:bg-gold-500/30 selection:text-gold-200">
+    
+    <!-- Top Premium Navigation -->
+    <header class="border-b border-islamic-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        <!-- Logo Branding -->
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-islamic-600 to-islamic-900 border border-gold-500/30 flex items-center justify-center shadow-lg shadow-islamic-950/50">
+            <!-- Elegant Islamic Crescent & Star SVG Icon -->
+            <svg class="h-6 w-6 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.083.996l-.041.02m-4.5-4.5l.042-.02a.75.75 0 111.082.996l-.041.02m-1.5 8.25l.042-.02a.75.75 0 111.082.996l-.041.02m13.5-3l.042-.02a.75.75 0 111.082.996l-.041.02m-9.5-3a9 9 0 0113.12-13.12 9 9 0 10-13.12 13.12z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-display text-lg tracking-widest font-semibold gold-text-gradient">AL-BAYAN</h1>
+            <p class="text-[10px] text-slate-400 tracking-wider uppercase font-medium">Quranic Image-Video Studio</p>
+          </div>
+        </div>
+
+        <!-- Status Indicator / Engine Badges -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-islamic-900/40 border border-islamic-700/50 text-xs">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span class="text-slate-300 font-medium text-[11px]">Core Engine Idle</span>
+          </div>
+          <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-400">
+            <span class="text-[10px] uppercase tracking-wider font-semibold">v1.0.0 (Client)</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Studio Layout -->
+    <div class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Sidebar: Controls & Options (lg:col-span-5) -->
+      <aside class="lg:col-span-5 flex flex-col gap-6" id="controlSidebar">
+        
+        <!-- Verse Selector Bento Block -->
+        <section class="bg-slate-900/60 border border-islamic-800/40 rounded-2xl p-5 backdrop-blur-sm shadow-xl">
+          <div class="flex items-center gap-2 mb-4 border-b border-islamic-800/40 pb-3">
+            <svg class="h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+            <h2 class="font-display font-semibold text-sm tracking-wider text-slate-200">1. Verse & Selection</h2>
+          </div>
+
+          <div class="grid grid-cols-12 gap-3">
+            <div class="col-span-7">
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wider">Select Surah</label>
+              <select id="surahSelect" class="w-full bg-slate-950 border border-slate-800 focus:border-islamic-600 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none transition">
+                <option value="1">1. Al-Fatihah (The Opening)</option>
+                <option value="2">2. Al-Baqarah (The Cow)</option>
+                <option value="3">3. Ali 'Imran (Family of Imran)</option>
+                <option value="18" selected>18. Al-Kahf (The Cave)</option>
+                <option value="55">55. Ar-Rahman (The Beneficent)</option>
+                <option value="114">114. An-Nas (Mankind)</option>
+              </select>
+            </div>
+
+            <div class="col-span-5">
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wider">Verse Range</label>
+              <div class="flex items-center gap-1">
+                <input id="startVerseInput" type="number" class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-2 text-center text-sm focus:outline-none focus:border-islamic-600" value="10" min="1" />
+                <span class="text-slate-500 text-xs">to</span>
+                <input id="endVerseInput" type="number" class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-2 text-center text-sm focus:outline-none focus:border-islamic-600" value="10" min="1" />
+              </div>
+            </div>
+
+            <div class="col-span-12">
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wider">Translation Language</label>
+              <select id="translationSelect" class="w-full bg-slate-950 border border-slate-800 focus:border-islamic-600 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none transition">
+                <option value="en" selected>English (Sahih International)</option>
+                <option value="id">Indonesian (Kemenag)</option>
+                <option value="sw">Swahili (Ali Muhsin Al-Barwani)</option>
+                <option value="tr">Turkish (Diyanet)</option>
+                <option value="ur">Urdu (Maududi)</option>
+                <option value="fr">French (Hamidullah)</option>
+                <option value="es">Spanish (Cortes)</option>
+              </select>
+            </div>
+
+            <div class="col-span-12 flex justify-end mt-1">
+              <button id="fetchButton" class="bg-gradient-to-r from-islamic-700 to-islamic-800 hover:from-islamic-600 hover:to-islamic-700 text-gold-100 border border-gold-500/30 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all shadow-md active:scale-95">
+                Fetch Verse Data
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Media Background & Overlays Block -->
+        <section class="bg-slate-900/60 border border-islamic-800/40 rounded-2xl p-5 backdrop-blur-sm shadow-xl">
+          <div class="flex items-center gap-2 mb-4 border-b border-islamic-800/40 pb-3">
+            <svg class="h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h2 class="font-display font-semibold text-sm tracking-wider text-slate-200">2. Background & Aesthetics</h2>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Information about copyright-free nature images -->
+            <div>
+              <span class="block text-[11px] font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Nature Background Media</span>
+              <p class="text-[11px] text-slate-300 leading-relaxed mb-3">
+                Utilizing premium, high-resolution, copyright-free nature photography from Unsplash, Pixabay, and Pexels.
+              </p>
+              <button id="shuffleBgBtn" class="w-full bg-slate-950 border border-slate-800 hover:border-gold-500/30 text-gold-400 py-2.5 px-4 rounded-lg text-xs font-semibold uppercase tracking-wider transition hover:text-gold-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+                </svg>
+                Shuffle Nature Background
+              </button>
+            </div>
+
+            <!-- Overlay dark opacity -->
+            <div>
+              <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                <span class="uppercase tracking-wider">Overlay Dark Contrast</span>
+                <span class="text-gold-400 font-mono">45%</span>
+              </div>
+              <input id="contrastSlider" type="range" class="w-full accent-gold-500" min="0" max="100" value="45" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Typography & Text Overlays -->
+        <section class="bg-slate-900/60 border border-islamic-800/40 rounded-2xl p-5 backdrop-blur-sm shadow-xl">
+          <div class="flex items-center gap-2 mb-4 border-b border-islamic-800/40 pb-3">
+            <svg class="h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <h2 class="font-display font-semibold text-sm tracking-wider text-slate-200">3. Fonts & Layout Controls</h2>
+          </div>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wider">Arabic Calligraphy</label>
+                <select id="arabicFontSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-islamic-600">
+                  <option value="Amiri" selected>Amiri Naskh</option>
+                  <option value="Reem Kufi">Reem Kufi</option>
+                  <option value="Scheherazade">Scheherazade</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wider">Translation Font</label>
+                <select id="translationFontSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-islamic-600">
+                  <option value="Plus Jakarta Sans" selected>Plus Jakarta</option>
+                  <option value="Cinzel (Display)">Cinzel (Display)</option>
+                  <option value="Georgia (Serif)">Georgia (Serif)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Typography Scaling Sliders -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>ARABIC SIZE</span>
+                  <span class="text-gold-400">32px</span>
+                </div>
+                <input id="arabicSizeSlider" type="range" class="w-full accent-gold-500" min="16" max="64" value="32" />
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>TRANS SIZE</span>
+                  <span class="text-gold-400">16px</span>
+                </div>
+                <input id="translationSizeSlider" type="range" class="w-full accent-gold-500" min="12" max="32" value="16" />
+              </div>
+            </div>
+
+            <!-- Font and Line Spacing Sliders -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>WORD SPACING</span>
+                  <span id="fontGapVal" class="text-gold-400">0px</span>
+                </div>
+                <input id="fontGapSlider" type="range" class="w-full accent-gold-500" min="0" max="12" value="0" />
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>LINE GAP (HEIGHT)</span>
+                  <span id="lineGapVal" class="text-gold-400">0px</span>
+                </div>
+                <input id="lineGapSlider" type="range" class="w-full accent-gold-500" min="0" max="40" value="0" />
+              </div>
+            </div>
+
+            <!-- Card Elements Toggles -->
+            <div class="space-y-2 pt-1">
+              <div class="flex items-center justify-between text-xs text-slate-300">
+                <span>Display Verse Diacritics</span>
+                <input id="diacriticsCheckbox" type="checkbox" checked class="accent-islamic-600 h-4 w-4 rounded" />
+              </div>
+              <div class="flex items-center justify-between text-xs text-slate-300">
+                <span>Draw Golden Ornate Borders</span>
+                <input id="goldenBorderCheckbox" type="checkbox" checked class="accent-islamic-600 h-4 w-4 rounded" />
+              </div>
+              <div class="flex items-center justify-between text-xs text-slate-300">
+                <span>Show Surah Reference Logo</span>
+                <input id="showReferenceCheckbox" type="checkbox" checked class="accent-islamic-600 h-4 w-4 rounded" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Recitations & Audio Engine Selection -->
+        <section class="bg-slate-900/60 border border-islamic-800/40 rounded-2xl p-5 backdrop-blur-sm shadow-xl">
+          <div class="flex items-center gap-2 mb-4 border-b border-islamic-800/40 pb-3">
+            <svg class="h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            <h2 class="font-display font-semibold text-sm tracking-wider text-slate-200">4. Audio & Recitation</h2>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wider">Choose Reciter (MP3)</label>
+              <select id="reciterSelect" class="w-full bg-slate-950 border border-slate-800 focus:border-islamic-600 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none transition">
+                <option selected>Mishary Rashid Alafasy</option>
+                <option>Abdul Rahman Al-Sudais</option>
+                <option>Saad Al-Ghamdi</option>
+                <option>Maher Al-Muaiqly</option>
+                <option>Yasser Al-Dosari</option>
+                <option>Abu Bakr Al-Shatri</option>
+                <option>Nasser Al-Qatami</option>
+                <option>Hani Ar-Rifai</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+      </aside>
+
+      <!-- Right Main Panel: Live Interactive Preview Card & Exports (lg:col-span-7) -->
+      <main class="lg:col-span-7 flex flex-col gap-6 pb-12" id="previewWorkspace">
+        
+        <!-- Canvas/Card Aspect Ratio Toggles -->
+        <div class="bg-slate-900/60 border border-islamic-800/40 rounded-2xl p-4 backdrop-blur-sm shadow-xl">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-widest font-display">Workspace Viewport Ratio:</span>
+            <div class="flex items-center gap-2">
+              <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gold-600 text-slate-950 border border-gold-400 shadow-md shadow-gold-600/10 transition hover:bg-gold-500">
+                1:1 Square
+              </button>
+              <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200 transition">
+                9:16 Story
+              </button>
+              <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200 transition">
+                16:9 Cinema
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Luxury Interactive Canvas/Card Display Frame -->
+        <div class="flex-1 min-h-[450px] md:min-h-[500px] bg-slate-950 border border-islamic-900/80 rounded-2xl p-6 flex items-center justify-center relative overflow-hidden group shadow-inner">
+          
+          <!-- Outer glowing corner geometric lines representing modern Islamic luxury feel -->
+          <div class="absolute inset-4 border border-gold-500/10 rounded-xl pointer-events-none"></div>
+          <div class="absolute top-6 left-6 h-4 w-4 border-t-2 border-l-2 border-gold-500/30 rounded-tl pointer-events-none"></div>
+          <div class="absolute top-6 right-6 h-4 w-4 border-t-2 border-r-2 border-gold-500/30 rounded-tr pointer-events-none"></div>
+          <div class="absolute bottom-6 left-6 h-4 w-4 border-b-2 border-l-2 border-gold-500/30 rounded-bl pointer-events-none"></div>
+          <div class="absolute bottom-6 right-6 h-4 w-4 border-b-2 border-r-2 border-gold-500/30 rounded-br pointer-events-none"></div>
+
+          <!-- The Real Canvas Placeholder (hidden behind mock overlay during design initial state) -->
+          <canvas id="studioCanvas" class="hidden absolute inset-0 w-full h-full object-contain bg-black rounded-xl"></canvas>
+
+          <!-- Mock High-Fidelity CSS Render representing verse design -->
+          <div id="mockupContainer" class="w-full max-w-[380px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black relative border border-gold-500/25 transition-all duration-300">
+            
+            <!-- Beautiful Nature Backing image (css linear-gradient mockup + scenic placeholder) -->
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700" 
+                 style="background-image: linear-gradient(180deg, rgba(16, 33, 30, 0.6) 0%, rgba(10, 10, 10, 0.95) 100%), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80');">
+            </div>
+
+            <!-- Dark Overlay Filter -->
+            <div class="absolute inset-0 bg-slate-950/40 pointer-events-none"></div>
+
+            <!-- Golden Inner Frame Boundary -->
+            <div class="absolute inset-3 border border-gold-500/20 rounded-lg pointer-events-none flex items-center justify-center">
+              <div class="absolute inset-1 border border-gold-400/5 rounded-md pointer-events-none"></div>
+            </div>
+
+            <!-- Gold Geometrics (Corners Inside frame) -->
+            <div class="absolute top-6 left-6 h-3 w-3 border-t border-l border-gold-400/40 rounded-tl pointer-events-none"></div>
+            <div class="absolute top-6 right-6 h-3 w-3 border-t border-r border-gold-400/40 rounded-tr pointer-events-none"></div>
+            <div class="absolute bottom-6 left-6 h-3 w-3 border-b border-l border-gold-400/40 rounded-bl pointer-events-none"></div>
+            <div class="absolute bottom-6 right-6 h-3 w-3 border-b border-r border-gold-400/40 rounded-br pointer-events-none"></div>
+
+            <!-- Main Text Overlays Container -->
+            <div class="absolute inset-0 p-8 flex flex-col justify-between text-center items-center select-none">
+              
+              <!-- Top Header: Islamic Calligraphic Accent/Bismillah -->
+              <div class="pt-2">
+                <div class="font-serif text-sm tracking-widest text-gold-300 opacity-90">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                <div class="h-[1px] w-12 bg-gradient-to-r from-transparent via-gold-500/30 to-transparent mx-auto mt-1.5"></div>
+              </div>
+
+              <!-- Center Verse and Arabic script -->
+              <div class="my-auto space-y-4 px-2">
+                <!-- Arabic calligraphic text -->
+                <div class="font-serif text-2xl leading-relaxed text-gold-100 drop-shadow-[0_2px_10px_rgba(226,104,45,0.2)] tracking-normal">
+                  رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا
+                </div>
+                
+                <!-- Separator -->
+                <div class="flex items-center justify-center gap-2 py-1">
+                  <span class="h-1 w-1 rounded-full bg-gold-500/40"></span>
+                  <span class="h-1.5 w-1.5 rounded-full bg-gold-400/70"></span>
+                  <span class="h-1 w-1 rounded-full bg-gold-500/40"></span>
+                </div>
+
+                <!-- Translation -->
+                <div class="font-sans text-xs font-light tracking-wide text-slate-300 leading-relaxed px-1">
+                  "Our Lord, let not our hearts deviate after You have guided us and grant us from Yourself mercy."
+                </div>
+              </div>
+
+              <!-- Bottom Footer: Reference logo and badge -->
+              <div class="pb-1">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 border border-gold-500/20 backdrop-blur-sm">
+                  <svg class="h-3 w-3 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
+                  </svg>
+                  <span class="font-display text-[9px] font-semibold tracking-wider text-gold-300 uppercase">Surah Ali 'Imran • 3:8</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Mock Playback Bar overlay representing live audio generation -->
+            <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-islamic-950/80">
+              <div class="h-full w-2/5 bg-gradient-to-r from-gold-500 to-gold-300 rounded-r shadow-lg"></div>
+            </div>
+
+          </div>
+
+          <!-- Bottom bar interactive audio visualization placeholder -->
+          <div class="absolute bottom-4 left-6 right-6 flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm">
+            <div class="flex items-center gap-2">
+              <button class="h-7 w-7 rounded-lg bg-gold-600/20 text-gold-400 border border-gold-500/20 flex items-center justify-center hover:bg-gold-600/30 cursor-not-allowed" disabled>
+                <!-- Play Icon -->
+                <svg class="h-3 w-3 fill-current" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+              <div class="text-[10px] font-mono text-slate-400">0:00 / 0:15</div>
+            </div>
+            <!-- Waves placeholder -->
+            <div class="flex items-end gap-0.5 h-6">
+              <span class="w-0.5 h-3 bg-gold-500/50 rounded-full"></span>
+              <span class="w-0.5 h-5 bg-gold-400/70 rounded-full"></span>
+              <span class="w-0.5 h-4 bg-gold-500/50 rounded-full"></span>
+              <span class="w-0.5 h-2 bg-slate-700 rounded-full"></span>
+              <span class="w-0.5 h-6 bg-gold-400 rounded-full"></span>
+              <span class="w-0.5 h-3 bg-gold-500/50 rounded-full"></span>
+              <span class="w-0.5 h-1 bg-slate-700 rounded-full"></span>
+              <span class="w-0.5 h-4 bg-slate-700 rounded-full"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Render Action Buttons -->
+        <section class="bg-slate-900/60 border border-islamic-800/40 rounded-2xl p-5 backdrop-blur-sm shadow-xl space-y-4">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button id="generateImageBtn" class="flex-1 bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-slate-950 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition duration-300 shadow-md hover:shadow-gold-500/20 active:scale-95">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Generate Image (PNG)
+            </button>
+
+            <button id="generateVideoBtn" class="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-slate-950 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition duration-300 shadow-md hover:shadow-emerald-500/20 active:scale-95">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Generate Video Story (MP4)
+            </button>
+          </div>
+
+          <!-- Video Rendering Status -->
+          <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+            <div class="flex justify-between items-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <span class="flex items-center gap-1.5 text-gold-400">
+                <svg class="h-3 w-3 animate-spin text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 16H20" />
+                </svg>
+                Engine Loader: Standby Mode
+              </span>
+              <span class="text-slate-500">Ready for generation</span>
+            </div>
+            <div class="h-1 w-full bg-slate-900 rounded-full overflow-hidden">
+              <div class="h-full w-0 bg-gold-500 rounded-full transition-all duration-300"></div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+
+    <!-- Premium Footer Credits -->
+    <footer class="border-t border-islamic-900/60 bg-slate-950/90 py-4 px-4 text-center">
+      <p class="text-[11px] text-slate-500 font-medium tracking-wide">
+        Al-Bayan Quran Verse Media Studio • Crafted with a Modern Premium Islamic Aesthetic • Powered by client-side MediaRecorder & Canvas.
+      </p>
+    </footer>
+
+    <!-- Beautiful Video Preview & Save Modal -->
+    <div id="videoPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm hidden transition-all duration-300 opacity-0">
+      <div class="bg-slate-900 border border-gold-500/20 rounded-2xl p-5 max-w-sm w-full mx-4 shadow-2xl relative flex flex-col gap-4 transform scale-95 transition-all duration-300">
+        <!-- Close icon button -->
+        <button id="closePreviewModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-100 transition cursor-pointer">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Header -->
+        <div class="text-center">
+          <h3 class="text-gold-400 font-serif text-base font-bold tracking-wide">Video Story Ready</h3>
+          <p class="text-slate-400 text-[11px] mt-1">Review your premium video story before saving.</p>
+        </div>
+
+        <!-- Video Player Wrapper -->
+        <div class="flex justify-center items-center rounded-xl overflow-hidden bg-slate-950 w-full min-h-[220px] max-h-[300px] border border-gold-500/10 relative p-1 shadow-inner">
+          <video id="modalVideoPlayer" controls class="max-h-[280px] max-w-full rounded-lg shadow-lg bg-slate-950" playsinline></video>
+        </div>
+
+        <!-- Hint -->
+        <div class="text-center text-[10px] text-slate-500">
+          * Captured dynamically at high-res 30FPS with native recitation audio tracks.
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex gap-3 justify-end border-t border-slate-800/80 pt-3 mt-1">
+          <button id="discardVideoBtn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer">
+            Discard
+          </button>
+          <button id="downloadVideoBtn" class="flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-slate-950 transition cursor-pointer shadow-lg shadow-gold-600/15 text-center">
+            Save Video
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap client side app scripts -->
+    <script type="module" src="/scripts/app.js"></script>
+
+  </body>
+</html>
