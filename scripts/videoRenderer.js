@@ -72,7 +72,7 @@ export class VideoRenderer {
     }
 
     // Overlay Gradients
-    const overlayColor = state.theme === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(16, 33, 30, 0.4)';
+    const overlayColor = state.theme === 'light' ? 'rgba(200, 200, 200, 0.4)' : 'rgba(16, 33, 30, 0.4)';
     const bottomColor = state.theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : 'rgba(10, 10, 10, 0.95)';
     const overlayGrad = ctx.createLinearGradient(0, 0, 0, h);
     overlayGrad.addColorStop(0, overlayColor);
@@ -118,7 +118,7 @@ export class VideoRenderer {
     ctx.fillStyle = state.theme === 'light' ? '#1e293b' : '#fdf5df';
     
     let displayAr = layout.arabic.text;
-    if (!state.diacritics) displayAr = displayAr.replace(/[\u064B-\u0652]/g, "");
+    if (!this.state.diacritics) displayAr = displayAr.replace(/[\u064B-\u0652]/g, "");
     
     // Wrap Arabic Text
     const arLines = this.wrapText(ctx, displayAr, w * 0.8);
@@ -128,7 +128,7 @@ export class VideoRenderer {
       arY += layout.arabic.fontSize * scale * 1.5 + (state.lineGap || 0) * scale;
     });
 
-    // Translation - FIXED: Use layout.translations.en instead of layout.english.text
+    // Translation
     const transFontMap = { 
       'Plus Jakarta Sans': '"Plus Jakarta Sans", sans-serif', 
       'Cinzel': '"Cinzel", serif', 
@@ -137,14 +137,14 @@ export class VideoRenderer {
       'Lora': '"Lora", serif', 
       'Georgia': 'Georgia, serif' 
     };
-    ctx.font = `300 ${layout.english.fontSize * scale}px ${transFontMap[state.translationFont] || transFontMap['Plus Jakarta Sans']}`;
+    ctx.font = `300 ${layout.translations.en.fontSize * scale}px ${transFontMap[state.translationFont] || transFontMap['Plus Jakarta Sans']}`;
     ctx.fillStyle = state.theme === 'light' ? '#475569' : '#cbd5e1';
     
-    const enLines = this.wrapText(ctx, layout.translations.en, w * 0.8); // Use translations.en
-    let enY = h * 0.65 - (enLines.length * layout.english.fontSize * scale * 0.5);
+    const enLines = this.wrapText(ctx, layout.translations.en, w * 0.8);
+    let enY = h * 0.65 - (enLines.length * layout.translations.en.fontSize * scale * 0.5);
     enLines.forEach(line => {
       ctx.fillText(line, centerX, enY);
-      enY += layout.english.fontSize * scale * 1.45 + (state.lineGap || 0) * scale;
+      enY += layout.translations.en.fontSize * scale * 1.45 + (state.lineGap || 0) * scale;
     });
 
     if (state.showReference) this.drawReferenceBanner(ctx, centerX, h * 0.9, layout.meta.reference, scale);

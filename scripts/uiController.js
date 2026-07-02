@@ -574,7 +574,7 @@ export class UIController {
         'Georgia': 'Georgia, serif'
       };
       englishTextEl.style.fontFamily = fontMap[this.state.translationFont] || fontMap['Plus Jakarta Sans'];
-      englishTextEl.innerHTML = `<div style="font-size: ${layout.english.fontSize}px; word-spacing: ${this.state.fontGap}px; line-height: ${layout.english.fontSize * 1.45 + this.state.lineGap}px;">${layout.english.text}</div>`;
+      englishTextEl.innerHTML = `<div style="font-size: ${layout.translations.en.fontSize}px; word-spacing: ${this.state.fontGap}px; line-height: ${layout.translations.en.fontSize * 1.45 + this.state.lineGap}px;">${layout.translations.en}</div>`;
     }
 
     if (referenceEl) referenceEl.textContent = layout.meta.reference;
@@ -582,7 +582,7 @@ export class UIController {
     const backgroundDiv = this.els.mockupContainer.querySelector('.absolute.inset-0.bg-cover');
     if (backgroundDiv) {
       const bgUrl = unsplashService.getBgImageSync(this.state.bgSeed || 12345, false);
-      const overlayColor = this.state.theme === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(16, 33, 30, 0.4)';
+      const overlayColor = this.state.theme === 'light' ? 'rgba(200, 200, 200, 0.4)' : 'rgba(16, 33, 30, 0.4)';
       const bottomColor = this.state.theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : 'rgba(10, 10, 10, 0.95)';
       backgroundDiv.style.backgroundImage = `linear-gradient(180deg, ${overlayColor} 0%, ${bottomColor} 100%), url('${bgUrl}')`;
     }
