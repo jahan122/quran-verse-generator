@@ -37,19 +37,17 @@ function combineVerses(verses, secondLanguage) {
   }).join(" ");
   
   const en = verses.map(v => v.translations.en).join(" ");
-  
-  const secondaryTextList = verses.map(v => v.translations[secondLanguage] || "").filter(Boolean);
-  const secondaryCombined = secondaryTextList.join(" ");
+  const translations = { en };
+  if (secondLanguage !== 'en') {
+    const secondaryTextList = verses.map(v => v.translations[secondLanguage] || "").filter(Boolean);
+    translations[secondLanguage] = secondaryTextList.join(" ");
+  }
   
   return {
     surahName: first.surahName,
-    surahNameArabic: first.surahNameArabic,
     verseKey,
     arabic,
-    translations: {
-      en,
-      [secondLanguage]: secondaryCombined
-    },
+    translations,
     audio: first.audio,
     verses: verses
   };
@@ -78,6 +76,7 @@ export class UIController {
       bgSeed: 12345,
       activeVerseData: null,
       isPlayingAudio: false,
+      currentVerseIdx: 0,
       fontGap: 0,
       lineGap: 0,
       theme: 'dark'
@@ -447,8 +446,7 @@ export class UIController {
 
     this.audioElement.addEventListener('timeupdate', () => this.updateAudioProgress());
     this.audioElement.addEventListener('ended', () => {
-      this.state.isPlayingAudio = false;
-      this.updateAudioBtnUI();
+      this.playNextVerse();
     });
   }
 
@@ -468,6 +466,7 @@ export class UIController {
       
       if (verses && verses.length > 0) {
         this.state.activeVerseData = combineVerses(verses, this.state.translation);
+        this.state.currentVerseIdx = 0;
         this.updateLoaderStatus("Data Synced Successfully", "100%", "bg-emerald-500");
         this.updateMockupPreview();
         this.loadAudioSource();
@@ -477,15 +476,28 @@ export class UIController {
     } catch (err) {
       console.error("UIController: Failed to fetch verse data", err);
       this.updateLoaderStatus("Fetch Failed - Retrying...", "100%", "bg-rose-500");
-      // Auto-retry once after a short delay if it fails
       setTimeout(() => this.triggerFetch(), 2000);
     }
   }
 
   loadAudioSource() {
-    if (!this.state.activeVerseData?.audio) return;
-    this.audioElement.src = this.state.activeVerseData.audio;
+    if (!this.state.activeVerseData?.verses?.[this.state.currentVerseIdx]?.audio) return;
+    this.audioElement.src = this.state.activeVerseData.verses[this.state.currentVerseIdx].audio;
     this.audioElement.load();
+  }
+
+  playNextVerse() {
+    if (!this.state.activeVerseData?.verses) return;
+    this.state.currentVerseIdx++;
+    if (this.state.currentVerseIdx < this.state.activeVerseData.verses.length) {
+      this.loadAudioSource();
+      this.audioElement.play().catch(e => console.warn("Audio play blocked", e));
+    } else {
+      this.state.isPlayingAudio = false;
+      this.state.currentVerseIdx = 0;
+      this.loadAudioSource();
+      this.updateAudioBtnUI();
+    }
   }
 
   toggleAudioPlay() {
@@ -494,6 +506,10 @@ export class UIController {
       this.audioElement.pause();
       this.state.isPlayingAudio = false;
     } else {
+      if (this.state.currentVerseIdx >= this.state.activeVerseData.verses.length) {
+        this.state.currentVerseIdx = 0;
+        this.loadAudioSource();
+      }
       this.audioElement.play().catch(e => console.warn("Audio play blocked", e));
       this.state.isPlayingAudio = true;
     }
@@ -573,8 +589,8 @@ export class UIController {
 
     const darkOverlay = this.els.mockupContainer.querySelector('.absolute.inset-0.bg-slate-950\\/40');
     if (darkOverlay) {
-      const overlayBase = this.state.theme === 'light' ? '255, 255, 255' : '2, 6, 23';
-      darkOverlay.style.backgroundColor = `rgba(${overlayBase}, ${this.state.contrast / 100})`;
+      // Always use a dark overlay for contrast regardless of theme
+      darkOverlay.style.backgroundColor = `rgba(2, 6, 23, ${this.state.contrast / 100})`;
     }
   }
 }

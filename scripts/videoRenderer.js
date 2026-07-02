@@ -81,8 +81,8 @@ export class VideoRenderer {
     ctx.fillRect(0, 0, w, h);
 
     const contrastOpacity = (state.contrast || 45) / 100;
-    const overlayBase = state.theme === 'light' ? '255, 255, 255' : '2, 6, 23';
-    ctx.fillStyle = `rgba(${overlayBase}, ${contrastOpacity})`;
+    // Always use dark overlay for contrast
+    ctx.fillStyle = `rgba(2, 6, 23, ${contrastOpacity})`;
     ctx.fillRect(0, 0, w, h);
 
     if (state.goldenBorder) this.drawGoldenFrame(ctx, w, h);
@@ -152,6 +152,7 @@ export class VideoRenderer {
   }
 
   wrapText(ctx, text, maxWidth) {
+    if (!text) return [];
     const words = text.split(' ');
     const lines = [];
     let currentLine = words[0];
