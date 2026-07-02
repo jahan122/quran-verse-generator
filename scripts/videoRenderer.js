@@ -81,7 +81,7 @@ export class VideoRenderer {
     ctx.fillRect(0, 0, w, h);
 
     const contrastOpacity = (state.contrast || 45) / 100;
-    // Always use dark overlay for contrast
+    // Always use dark overlay for contrast regardless of theme
     ctx.fillStyle = `rgba(2, 6, 23, ${contrastOpacity})`;
     ctx.fillRect(0, 0, w, h);
 
@@ -128,7 +128,7 @@ export class VideoRenderer {
       arY += layout.arabic.fontSize * scale * 1.5 + (state.lineGap || 0) * scale;
     });
 
-    // Translation
+    // Translation - FIXED: Use layout.translations.en instead of layout.english.text
     const transFontMap = { 
       'Plus Jakarta Sans': '"Plus Jakarta Sans", sans-serif', 
       'Cinzel': '"Cinzel", serif', 
@@ -140,7 +140,7 @@ export class VideoRenderer {
     ctx.font = `300 ${layout.english.fontSize * scale}px ${transFontMap[state.translationFont] || transFontMap['Plus Jakarta Sans']}`;
     ctx.fillStyle = state.theme === 'light' ? '#475569' : '#cbd5e1';
     
-    const enLines = this.wrapText(ctx, layout.english.text, w * 0.8);
+    const enLines = this.wrapText(ctx, layout.translations.en, w * 0.8); // Use translations.en
     let enY = h * 0.65 - (enLines.length * layout.english.fontSize * scale * 0.5);
     enLines.forEach(line => {
       ctx.fillText(line, centerX, enY);
