@@ -49,7 +49,7 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
 
   const recitationId = RECITER_IDS[reciterName] || 7;
   const transIds = [TRANSLATION_IDS.en];
-  if (secondLanguage !== 'en' && TRANSLATION_IDS[secondLanguage]) {
+  if (secondLanguage && secondLanguage !== 'en' && TRANSLATION_IDS[secondLanguage]) {
     transIds.push(TRANSLATION_IDS[secondLanguage]);
   }
 
@@ -72,9 +72,9 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
     });
 
     // 2. Fetch Verses with Translations and Arabic Text in one bulk request
-    // We fetch the specific page/range to be efficient
+    // Added page=1 parameter to ensure consistent pagination
     const versesRes = await fetch(
-      `https://api.quran.com/api/v4/verses/by_chapter/${surahId}?translations=${transIds.join(',')}&fields=text_uthmani&per_page=286`
+      `https://api.quran.com/api/v4/verses/by_chapter/${surahId}?translations=${transIds.join(',')}&fields=text_uthmani&per_page=286&page=1`
     );
     
     if (!versesRes.ok) throw new Error("Failed to fetch verses");
