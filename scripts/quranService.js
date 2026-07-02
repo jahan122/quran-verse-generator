@@ -5,7 +5,7 @@
  */
 
 const BASE_URL = "https://api.quran.com/content/api/v4";
-const OLD_API_URL = "https://api.quran.com/api/v4";
+const OLD_API_URL = "https://api.quran.com/api/v4"; // Confirmed working in version 2
 const TRANSLATION_IDS = { en: 131, id: 33, sw: 125, tr: 77, ur: 97, fr: 31, es: 83 };
 
 /**
@@ -22,26 +22,30 @@ export function cleanTranslationText(text) {
 
 /**
  * Get the list of Surahs (chapters) using the OLD API that was working in version 2.
- * We keep the content API for other endpoints as requested.
+ * Implements retry logic with max 5 attempts.
  */
 export async function getSurahs() {
-  try {
-    // Use the old API endpoint that was working in version 2
-    const res = await fetch(`${OLD_API_URL}/chapters`);
-    if (!res.ok) {
-      throw new Error(`Failed to fetch surahs: ${res.status} ${res.statusText}`);
+  const maxRetries = 5;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(`${OLD_API_URL}/chapters`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch surahs (attempt ${attempt+1}/${maxRetries}): ${res.status} ${res.statusText}`);
+      }
+      const data = await res.json();
+      return data.chapters.map(ch => ({
+        id: ch.id,
+        name: ch.name_simple,
+        arabic: ch.name_arabic,
+        versesCount: ch.verses_count
+      }));
+    } catch (e) {
+      if (attempt === maxRetries - 1) {
+        throw new Error(`getSurahs failed after ${maxRetries} attempts: ${e.message}`);
+      }
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
     }
-    const data = await res.json();
-    // The old API returns { chapters: [...] }
-    return data.chapters.map(ch => ({
-      id: ch.id,
-      name: ch.name_simple,
-      arabic: ch.name_arabic,
-      versesCount: ch.verses_count
-    }));
-  } catch (e) {
-    console.error("getSurahs error:", e);
-    throw new Error(`getSurahs failed: ${e.message}`);
   }
 }
 
@@ -79,33 +83,24 @@ export async function fetchVerses(
   }
 
   try {
-    // -------------------------------------------------
-    // 1️⃣ Parallel fetch: audio files (content API) + surah metadata (old API that works)
-    // -------------------------------------------------
+    // Parallel fetch: audio files (content API) + surah metadata (old API that works)
     const [audioRes, surahRes] = await Promise.all([
-      fetch(
-        `${BASE_URL}/quran/recitations/${recitationId}?chapter_number=${surahId}`
-      ),
+      fetch(`${BASE_URL}/quran/recitations/${recitationId}?chapter_number=${surahId}`),
       fetch(`${OLD_API_URL}/chapters/${surahId}`)
     ]);
 
     if (!audioRes.ok) {
-      throw new Error(
-        `Audio fetch failed (status ${audioRes.status}) for reciter ${reciterName}`
-      );
+      throw new Error(`Audio fetch failed (status ${audioRes.status}) for reciter ${reciterName}`);
     }
     if (!surahRes.ok) {
-      throw new Error(
-        `Surah metadata fetch failed (status ${surahRes.status}) for surah ${surahId}`
-      );
+      throw new Error(`Surah metadata fetch failed (status ${surahRes.status}) for surah ${surahId}`);
     }
 
     const audioData = await audioRes.json();
     const surahData = await surahRes.json();
-    const surahName =
-      surahData?.chapter?.name_simple || surahNameFallback || `Surah ${surahId}`;
+    const surahName = surahData?.chapter?.name_simple || surahNameFallback || `Surah ${surahId}`;
 
-    // Build a map: verseKey → audio URL
+    // Build verseKey → audio URL map
     const audioMap = {};
     if (Array.isArray(audioData.audio_files)) {
       audioData.audio_files.forEach(file => {
@@ -117,9 +112,7 @@ export async function fetchVerses(
       });
     }
 
-    // -------------------------------------------------
-    // 2️⃣ Fetch verses (Arabic + requested translations) via content API
-    // -------------------------------------------------
+    // Fetch verses via content API
     const versesRes = await fetch(
       `${BASE_URL}/verses/by_chapter/${surahId}` +
         `?translations=${transIds.join(",")}` +
@@ -129,75 +122,52 @@ export async function fetchVerses(
 
     if (!versesRes.ok) {
       const errBody = await versesRes.text();
-      throw new Error(
-        `Verses fetch failed (status ${versesRes.status}) – ${errBody}`
-      );
+      throw new Error(`Verses fetch failed (status ${versesRes.status}) – ${errBody}`);
     }
 
     const versesData = await versesRes.json();
 
-    // -------------------------------------------------
-    // 3️⃣ Filter to the requested range and shape the payload
-    // -------------------------------------------------
+    // Filter and shape results
     const results = versesData.verses
       .filter(v => {
         const vNum = parseInt(v.verse_key.split(":")[1], 10);
         return vNum >= startVerse && vNum <= endVerse;
       })
-      .map(v => {
-        const translations = {};
-        if (Array.isArray(v.translations)) {
-          v.translations.forEach(t => {
-            if (t.resource_id === TRANSLATION_IDS.en) {
-              translations.en = cleanTranslationText(t.text);
-            } else if (t.resource_id === TRANSLATION_IDS[secondLanguage]) {
-              translations[secondLanguage] = cleanTranslationText(t.text);
-            }
-          });
-        }
-
-        return {
-          surahId: Number(surahId),
-          surahName,
-          verseKey: v.verse_key,
-          arabic: v.text_uthmani,
-          translations,
-          audio: audioMap[v.verse_key] || ""
-        };
-      });
+      .map(v => ({
+        surahId: Number(surahId),
+        surahName,
+        verseKey: v.verse_key,
+        arabic: v.text_uthmani,
+        translations: {
+          en: cleanTranslationText(v.translations.find(t => t.resource_id === TRANSLATION_IDS.en)?.text || ""),
+          [secondLanguage]: cleanTranslationText(v.translations.find(t => t.resource_id === TRANSLATION_IDS[secondLanguage])?.text || "")
+        },
+        audio: audioMap[v.verse_key] || ""
+      }));
 
     if (results.length === 0) {
-      throw new Error(
-        `No verses found for Surah ${surahId} in range ${startVerse}-${endVerse}`
-      );
+      throw new Error(`No verses found for Surah ${surahId} in range ${startVerse}-${endVerse}`);
     }
 
     return results;
   } catch (err) {
     console.error("fetchVerses critical error:", err);
 
-    // -------------------------------------------------
-    // Fallback: a minimal static verse so the UI never breaks
-    // -------------------------------------------------
+    // Fallback verse
     const fallbackVerseKey = `${surahId}:1`;
-    const fallback = [
-      {
-        surahId: Number(surahId),
-        surahName:
-          surahNameFallback || `Surah ${surahId} (fallback data)`,
-        verseKey: fallbackVerseKey,
-        arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-        translations: {
-          en: "In the name of Allah, the Most Gracious, the Most Merciful.",
-          [secondLanguage]:
-            secondLanguage !== "en"
-              ? "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ (fallback translation)"
-              : undefined
-        },
-        audio: ""
-      }
-    ];
-    return fallback;
+    return [{
+      surahId: Number(surahId),
+      surahName: surahNameFallback || `Surah ${surahId} (fallback)`,
+      verseKey: fallbackVerseKey,
+      arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+      translations: {
+        en: "In the name of Allah, the Most Gracious, the Most Merciful.",
+        [secondLanguage]: secondLanguage !== "en"
+          ? "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ (fallback)"
+          : undefined
+      },
+      audio: ""
+    }];
   }
 }
 
