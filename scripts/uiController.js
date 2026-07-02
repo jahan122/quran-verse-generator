@@ -589,7 +589,7 @@ export class UIController {
 
     const darkOverlay = this.els.mockupContainer.querySelector('.absolute.inset-0.bg-slate-950\\/40');
     if (darkOverlay) {
-      // Always use a dark overlay for contrast regardless of theme
+      // Always use dark overlay for contrast regardless of theme
       darkOverlay.style.backgroundColor = `rgba(2, 6, 23, ${this.state.contrast / 100})`;
     }
   }
