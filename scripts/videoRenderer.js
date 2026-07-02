@@ -63,10 +63,7 @@ export class VideoRenderer {
     this.configureCanvasResolution(state.aspectRatio);
 
     // Preload background image to cache to ensure it's drawn in the exported image
-    let bgUrl = 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1280&q=80';
-    if (state.bgType === 'image') {
-      bgUrl = unsplashService.getBgImageSync(state.bgSeed || 12345, true);
-    }
+    const bgUrl = unsplashService.getBgImageSync(state.bgSeed || 12345, true);
     await this.getCachedImage(bgUrl);
 
     // Draw the static layout onto the export canvas
@@ -818,36 +815,15 @@ export class VideoRenderer {
     this.configureCanvasResolution(state.aspectRatio);
 
     // Preload background image to cache to ensure zero latency/flicker during video render
-    let bgUrl = 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1280&q=80';
-    if (state.bgType === 'image') {
-      const query = encodeURIComponent(state.searchQuery || 'nature landscape stars');
-      const sig = state.bgSeed || 12345;
-      bgUrl = `https://images.unsplash.com/featured/1280x720/?${query}&sig=${sig}`;
-    }
+    const bgUrl = unsplashService.getBgImageSync(state.bgSeed || 12345, true);
     onProgress(15, "Pre-loading premium background...");
     await this.getCachedImage(bgUrl);
 
     // Create a dedicated audio element specifically for recording to avoid event-listener conflicts
-    // It is created and primed here, synchronously within the user-gesture click handler context,
-    // to unlock it and bypass any browser autoplay/security restrictions.
     const recordingAudio = new Audio();
     recordingAudio.crossOrigin = "anonymous";
     recordingAudio.src = cachedAudioUrls[0];
     recordingAudio.load();
-
-    try {
-      const unlockPromise = recordingAudio.play();
-      if (unlockPromise !== undefined) {
-        unlockPromise.then(() => {
-          recordingAudio.pause();
-          recordingAudio.currentTime = 0;
-        }).catch(e => {
-          console.warn("Autoplay bypass primed audio caught restriction rejection:", e);
-        });
-      }
-    } catch (e) {
-      console.warn("Direct audio priming exception caught:", e);
-    }
 
     // Connect dedicated audio stream natively
     let audioStreamTrack;
@@ -865,7 +841,6 @@ export class VideoRenderer {
         this.audioSourceNode.connect(this.audioCtx.destination);
         this.audioSourceNode.connect(dest);
         audioStreamTrack = dest.stream.getAudioTracks()[0];
-        console.log("VideoRenderer: Successfully established dedicated recording audio track capture:", audioStreamTrack);
       } catch (e) {
         console.warn("VideoRenderer: Media Capture Audio pipeline bypass active.", e);
       }
@@ -899,7 +874,7 @@ export class VideoRenderer {
     try {
       this.mediaRecorder = new MediaRecorder(combinedStream, options);
     } catch (err) {
-      console.warn("MediaRecorder creation with audio failed (possibly due to CORS or secure iframe limitations). Falling back to video-only capture.", err);
+      console.warn("MediaRecorder creation with audio failed. Falling back to video-only capture.", err);
       const videoOnlyStream = new MediaStream();
       canvasStream.getVideoTracks().forEach(track => videoOnlyStream.addTrack(track));
       this.mediaRecorder = new MediaRecorder(videoOnlyStream, options);
@@ -922,52 +897,51 @@ export class VideoRenderer {
       this.mediaRecorder.onerror = (e) => reject(e);
     });
 
-    // Start Recording
-    this.mediaRecorder.start();
+    // Start Audio and Recorder in sync
     await recordingAudio.play().catch(e => console.warn("Recording audio play start error", e));
-
+    this.mediaRecorder.start();
+    
     this.isTransitioning = false;
     this.verseStartTime = performance.now();
 
-    // Nested animation frames drawer with sequential verse handling driven by real-time audio and wall clock fallback
+    // Nested animation frames drawer with sequential verse handling
     const renderLoop = async (now) => {
       if (!this.isRecording) return;
       
       const activeVerse = individualVerses[this.currentVerseIndex] || individualVerses[individualVerses.length - 1];
 
-      // Robustly estimate active verse duration from real audio or safe text metrics
-      let verseDuration = 8; // Default fallback: 8s
+      // Robustly estimate active verse duration
+      let verseDuration = 8; 
       if (recordingAudio && recordingAudio.duration && !isNaN(recordingAudio.duration) && recordingAudio.duration > 0) {
         verseDuration = recordingAudio.duration;
       } else if (activeVerse && activeVerse.arabic) {
-        // Estimate: ~12 chars per second, bounded between 5s and 25s
-        verseDuration = Math.max(5, Math.min(25, activeVerse.arabic.length / 12));
+        verseDuration = Math.max(6, Math.min(25, activeVerse.arabic.length / 10));
       }
 
       const realElapsed = (performance.now() - this.verseStartTime) / 1000;
 
-      // Determine if active verse is complete with a 1.0 second min-duration guard to prevent rapid double transitions
+      // Determine if active verse is complete
       let isVerseFinished = false;
-      if (realElapsed > 1.0) {
-        if (recordingAudio && !recordingAudio.paused) {
-          isVerseFinished = recordingAudio.ended;
-          // Fallback for network hiccups or stalled audio
-          if (!isVerseFinished && realElapsed > verseDuration + 4.0) {
+      if (realElapsed > 2.0) { // 2 second minimum per verse for stability
+        if (recordingAudio && recordingAudio.src && recordingAudio.src !== "") {
+          if (recordingAudio.ended) {
             isVerseFinished = true;
+          } else if (realElapsed > verseDuration + 5.0) {
+            isVerseFinished = true; // Safety timeout
           }
         } else {
           isVerseFinished = realElapsed >= verseDuration;
         }
       }
 
-      // Handle automatic sequential verse transition when active verse is complete
+      // Handle automatic sequential verse transition
       if (isVerseFinished && !this.isTransitioning) {
         this.isTransitioning = true;
         this.currentVerseIndex++;
         
         if (this.currentVerseIndex < individualVerses.length) {
           const nextVerse = individualVerses[this.currentVerseIndex];
-          onProgress((this.currentVerseIndex / individualVerses.length) * 100, `Fading to Verse ${this.currentVerseIndex + 1}...`);
+          onProgress((this.currentVerseIndex / individualVerses.length) * 100, `Transitioning to Verse ${this.currentVerseIndex + 1}...`);
           
           try {
             recordingAudio.pause();
@@ -986,28 +960,19 @@ export class VideoRenderer {
         }
       }
 
-      // Recalculate duration for progress bar
-      let currentVerse = individualVerses[this.currentVerseIndex] || individualVerses[individualVerses.length - 1];
-      let currentVerseDuration = 8;
-      if (recordingAudio && recordingAudio.duration && !isNaN(recordingAudio.duration) && recordingAudio.duration > 0) {
-        currentVerseDuration = recordingAudio.duration;
-      } else if (currentVerse && currentVerse.arabic) {
-        currentVerseDuration = Math.max(5, Math.min(25, currentVerse.arabic.length / 12));
-      }
-
       // Calculate smooth, predictable recording progress
       let progress = 0;
       if (individualVerses.length > 0) {
         const baseProgress = (this.currentVerseIndex / individualVerses.length) * 100;
         const currentVerseProgress = recordingAudio && !recordingAudio.paused && recordingAudio.duration 
           ? Math.min(1.0, recordingAudio.currentTime / recordingAudio.duration)
-          : Math.min(1.0, realElapsed / currentVerseDuration);
+          : Math.min(1.0, realElapsed / verseDuration);
         progress = Math.min(100, baseProgress + (currentVerseProgress * (100 / individualVerses.length)));
       }
 
       onProgress(progress, `Rendering Frame: ${Math.floor(progress)}%`);
 
-      // Update frame drawing for the active sequential verse safely
+      // Update frame drawing
       try {
         await this.drawFrame(state, activeVerse, now, true);
       } catch (err) {
@@ -1020,7 +985,7 @@ export class VideoRenderer {
         this.animationFrameId = requestAnimationFrame(renderLoop);
       } else {
         if (this.endingBufferFrames === undefined) {
-          this.endingBufferFrames = 36; // 36 frames (~1.2 seconds) of static pad to prevent cutoff
+          this.endingBufferFrames = 36; // ~1.2 seconds of static pad
         }
         
         if (this.endingBufferFrames > 0) {
@@ -1036,7 +1001,7 @@ export class VideoRenderer {
     this.animationFrameId = requestAnimationFrame(renderLoop);
     const downloadUrl = await recordPromise;
 
-    // Clean up allocated system memory nodes safely to avoid browser leakage
+    // Clean up
     this.cleanupRecording(recordingAudio);
     
     const filename = `Al-Bayan_${verse.surahName}_${verse.verseKey.replace(':', '_')}.mp4`;
