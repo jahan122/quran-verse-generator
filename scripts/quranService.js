@@ -1,13 +1,18 @@
 /**
  * @file quranService.js
- * @description Frontend-only service for fetching Arabic text and translations.
+ * @description Optimized service for fetching Quranic data using bulk endpoints.
  */
 
 const TRANSLATION_IDS = { en: 131, id: 33, sw: 125, tr: 77, ur: 97, fr: 31, es: 83 };
 
 export function cleanTranslationText(text) {
   if (!text) return "";
-  return text.replace(/<[^>]*>/g, "").replace(/[\(\[\{][\s\d\-–,،\u0660-\u0669\u06f0-\u06f9]*[\)\]\}]/g, " ").replace(/\s+/g, " ").trim();
+  // Remove HTML tags and footnotes/references in brackets
+  return text
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\(\[\{][\s\d\-–,،\u0660-\u0669\u06f0-\u06f9]*[\)\]\}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function getSurahs() {
@@ -43,76 +48,66 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
   };
 
   const recitationId = RECITER_IDS[reciterName] || 7;
-  const audioFilesMap = {};
-  
-  let surahName = surahNameFallback || `Surah ${surahId}`;
-
-  try {
-    // Fetch audio and surah info in parallel
-    const [audioRes, surahRes] = await Promise.all([
-      fetch(`https://api.quran.com/api/v4/quran/recitations/${recitationId}?chapter_number=${surahId}`),
-      surahNameFallback ? Promise.resolve(null) : fetch(`https://api.quran.com/api/v4/chapters/${surahId}`)
-    ]);
-
-    if (audioRes.ok) {
-      const audioData = await audioRes.json();
-      audioData.audio_files.forEach(file => {
-        if (file.verse_key && file.url) {
-          audioFilesMap[file.verse_key] = file.url.startsWith("http") ? file.url : `https://audio.qurancdn.com/${file.url}`;
-        }
-      });
-    }
-
-    if (surahRes && surahRes.ok) {
-      const sData = await surahRes.json();
-      surahName = sData.chapter.name_simple;
-    }
-  } catch (e) {
-    console.warn("Initial metadata fetch error:", e);
+  const transIds = [TRANSLATION_IDS.en];
+  if (secondLanguage !== 'en' && TRANSLATION_IDS[secondLanguage]) {
+    transIds.push(TRANSLATION_IDS[secondLanguage]);
   }
 
-  const versePromises = [];
-  for (let v = startVerse; v <= endVerse; v++) {
-    const key = `${surahId}:${v}`;
+  try {
+    // 1. Fetch Audio and Surah Info in parallel
+    const [audioRes, surahRes] = await Promise.all([
+      fetch(`https://api.quran.com/api/v4/quran/recitations/${recitationId}?chapter_number=${surahId}`),
+      fetch(`https://api.quran.com/api/v4/chapters/${surahId}`)
+    ]);
+
+    const audioData = audioRes.ok ? await audioRes.json() : { audio_files: [] };
+    const surahData = surahRes.ok ? await surahRes.json() : null;
+    const surahName = surahData?.chapter?.name_simple || surahNameFallback || `Surah ${surahId}`;
+
+    const audioFilesMap = {};
+    audioData.audio_files.forEach(file => {
+      if (file.verse_key) {
+        audioFilesMap[file.verse_key] = file.url.startsWith("http") ? file.url : `https://audio.qurancdn.com/${file.url}`;
+      }
+    });
+
+    // 2. Fetch Verses with Translations and Arabic Text in one bulk request
+    // We fetch the specific page/range to be efficient
+    const versesRes = await fetch(
+      `https://api.quran.com/api/v4/verses/by_chapter/${surahId}?translations=${transIds.join(',')}&fields=text_uthmani&per_page=286`
+    );
     
-    const fetchVerseData = async () => {
-      try {
-        const [arRes, enRes, secRes] = await Promise.all([
-          fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?verse_key=${key}`),
-          fetch(`https://api.quran.com/api/v4/quran/translations/${TRANSLATION_IDS.en}?verse_key=${key}`),
-          secondLanguage !== "en" ? fetch(`https://api.quran.com/api/v4/quran/translations/${TRANSLATION_IDS[secondLanguage] || 33}?verse_key=${key}`) : Promise.resolve(null)
-        ]);
+    if (!versesRes.ok) throw new Error("Failed to fetch verses");
+    const versesData = await versesRes.json();
 
-        if (!arRes.ok || !enRes.ok) return null;
-
-        const [arData, enData, secData] = await Promise.all([
-          arRes.json(),
-          enRes.json(),
-          secRes ? secRes.json() : Promise.resolve(null)
-        ]);
+    // 3. Filter and Map the results to our range
+    const results = versesData.verses
+      .filter(v => {
+        const vNum = parseInt(v.verse_key.split(':')[1]);
+        return vNum >= startVerse && vNum <= endVerse;
+      })
+      .map(v => {
+        const translations = {};
+        v.translations.forEach(t => {
+          if (t.resource_id === TRANSLATION_IDS.en) translations.en = cleanTranslationText(t.text);
+          else translations[secondLanguage] = cleanTranslationText(t.text);
+        });
 
         return {
           surahId: parseInt(surahId),
           surahName: surahName,
-          verseKey: key,
-          arabic: arData.verses[0].text_uthmani,
-          translations: { 
-            en: cleanTranslationText(enData.translations[0].text), 
-            [secondLanguage]: secData ? cleanTranslationText(secData.translations[0].text) : "" 
-          },
-          audio: audioFilesMap[key]
+          verseKey: v.verse_key,
+          arabic: v.text_uthmani,
+          translations: translations,
+          audio: audioFilesMap[v.verse_key]
         };
-      } catch (err) {
-        console.error(`Error fetching verse ${key}:`, err);
-        return null;
-      }
-    };
-    
-    versePromises.push(fetchVerseData());
-  }
+      });
 
-  const results = await Promise.all(versePromises);
-  return results.filter(v => v !== null);
+    return results;
+  } catch (err) {
+    console.error("fetchVerses critical error:", err);
+    throw err;
+  }
 }
 
 export const quranService = { getSurahs, fetchVerses };

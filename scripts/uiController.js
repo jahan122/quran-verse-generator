@@ -476,7 +476,9 @@ export class UIController {
       }
     } catch (err) {
       console.error("UIController: Failed to fetch verse data", err);
-      this.updateLoaderStatus("Fetch Failed", "100%", "bg-rose-500");
+      this.updateLoaderStatus("Fetch Failed - Retrying...", "100%", "bg-rose-500");
+      // Auto-retry once after a short delay if it fails
+      setTimeout(() => this.triggerFetch(), 2000);
     }
   }
 
