@@ -18,7 +18,9 @@ export function cleanTranslationText(text) {
 export async function getSurahs() {
   try {
     const res = await fetch("https://api.quran.com/api/v4/chapters");
-    if (!res.ok) throw new Error("Failed to fetch surahs");
+    if (!res.ok) {
+      throw new Error(`Failed to fetch surahs: ${res.status} ${res.statusText}`);
+    }
     const data = await res.json();
     return data.chapters.map(ch => ({ 
       id: ch.id, 
@@ -28,7 +30,7 @@ export async function getSurahs() {
     }));
   } catch (e) {
     console.error("getSurahs error:", e);
-    return [];
+    throw new Error(`getSurahs failed: ${e.message}`);
   }
 }
 
@@ -60,8 +62,17 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
       fetch(`https://api.quran.com/api/v4/chapters/${surahId}`)
     ]);
 
-    const audioData = audioRes.ok ? await audioRes.json() : { audio_files: [] };
-    const surahData = surahRes.ok ? await surahRes.json() : null;
+    // Check audio response
+    if (!audioRes.ok) {
+      throw new Error(`Failed to fetch audio for surah ${surahId}: ${audioRes.status} ${audioRes.statusText}`);
+    }
+    const audioData = await audioRes.json();
+
+    // Check surah response
+    if (!surahRes.ok) {
+      throw new Error(`Failed to fetch surah info for surah ${surahId}: ${surahRes.status} ${surahRes.statusText}`);
+    }
+    const surahData = await surahRes.json();
     const surahName = surahData?.chapter?.name_simple || surahNameFallback || `Surah ${surahId}`;
 
     const audioFilesMap = {};
@@ -72,12 +83,21 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
     });
 
     // 2. Fetch Verses with Translations and Arabic Text in one bulk request
-    // Added page=1 parameter to ensure consistent pagination
     const versesRes = await fetch(
       `https://api.quran.com/api/v4/verses/by_chapter/${surahId}?translations=${transIds.join(',')}&fields=text_uthmani&per_page=286&page=1`
     );
     
-    if (!versesRes.ok) throw new Error("Failed to fetch verses");
+    if (!versesRes.ok) {
+      // Try to get error details from response body
+      let errorDetails = '';
+      try {
+        const errorData = await versesRes.json();
+        errorDetails = JSON.stringify(errorData);
+      } catch (e) {
+        errorDetails = await versesRes.text();
+      }
+      throw new Error(`Failed to fetch verses for surah ${surahId}: ${versesRes.status} ${versesRes.statusText} - ${errorDetails}`);
+    }
     const versesData = await versesRes.json();
 
     // 3. Filter and Map the results to our range
@@ -103,10 +123,19 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
         };
       });
 
+    if (results.length === 0) {
+      throw new Error(`No verses found for surah ${surahId}, verses ${startVerse}-${endVerse}`);
+    }
+
     return results;
   } catch (err) {
     console.error("fetchVerses critical error:", err);
-    throw err;
+    // Ensure we throw an Error object with a message
+    if (err instanceof Error) {
+      throw err;
+    } else {
+      throw new Error(String(err));
+    }
   }
 }
 
