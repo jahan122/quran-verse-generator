@@ -98,6 +98,7 @@ export class UIController {
       };
     }
     this.els = {};
+    this.chapters = [];
   }
 
   initElements() {
@@ -462,12 +463,16 @@ export class UIController {
   async triggerFetch() {
     this.updateLoaderStatus("Fetching Quranic Data...", "60%", "bg-gold-500");
     try {
-      const verses = await quranService.fetchVerses(this.state.surah, this.state.startVerse, this.state.endVerse, this.state.translation, this.state.reciter);
+      const surahNameFallback = this.chapters.find(c => c.id === this.state.surah)?.name || "";
+      const verses = await quranService.fetchVerses(this.state.surah, this.state.startVerse, this.state.endVerse, this.state.translation, this.state.reciter, surahNameFallback);
+      
       if (verses && verses.length > 0) {
         this.state.activeVerseData = combineVerses(verses, this.state.translation);
         this.updateLoaderStatus("Data Synced Successfully", "100%", "bg-emerald-500");
         this.updateMockupPreview();
         this.loadAudioSource();
+      } else {
+        throw new Error("No verses returned");
       }
     } catch (err) {
       console.error("UIController: Failed to fetch verse data", err);
