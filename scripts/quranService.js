@@ -84,14 +84,17 @@ export async function fetchVerses(
       fetch(`https://api.quran.com/api/v4/chapters/${surahId}`)
     ]);
 
+    // Check audio response
     if (!audioRes.ok) {
+      const audioError = await audioRes.text();
       throw new Error(
-        `Audio fetch failed (status ${audioRes.status}) for reciter ${reciterName}`
+        `Audio fetch failed (status ${audioRes.status}) for reciter ${reciterName}: ${audioError}`
       );
     }
     if (!surahRes.ok) {
+      const surahError = await surahRes.text();
       throw new Error(
-        `Surah metadata fetch failed (status ${surahRes.status}) for surah ${surahId}`
+        `Surah metadata fetch failed (status ${surahRes.status}) for surah ${surahId}: ${surahError}`
       );
     }
 
@@ -122,14 +125,21 @@ export async function fetchVerses(
         `&per_page=286&page=1`
     );
 
+    // Check verses response
     if (!versesRes.ok) {
-      const errBody = await versesRes.text();
+      const versesError = await versesRes.text();
       throw new Error(
-        `Verses fetch failed (status ${versesRes.status}) – ${errBody}`
+        `Verses fetch failed (status ${versesRes.status}) – ${versesError}`
       );
     }
 
-    const versesData = await versesRes.json();
+    // Validate response format
+    let versesData;
+    try {
+      versesData = await versesRes.json();
+    } catch (e) {
+      throw new Error(`Failed to parse verses response: ${e.message}`);
+    }
 
     // -------------------------------------------------
     // 3️⃣ Filter to the requested range and shape the payload
