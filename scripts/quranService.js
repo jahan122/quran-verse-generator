@@ -76,11 +76,13 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
     const surahName = surahData?.chapter?.name_simple || surahNameFallback || `Surah ${surahId}`;
 
     const audioFilesMap = {};
-    audioData.audio_files.forEach(file => {
-      if (file.verse_key) {
-        audioFilesMap[file.verse_key] = file.url.startsWith("http") ? file.url : `https://audio.qurancdn.com/${file.url}`;
-      }
-    });
+    if (audioData.audio_files && Array.isArray(audioData.audio_files)) {
+      audioData.audio_files.forEach(file => {
+        if (file.verse_key) {
+          audioFilesMap[file.verse_key] = file.url.startsWith("http") ? file.url : `https://audio.qurancdn.com/${file.url}`;
+        }
+      });
+    }
 
     // 2. Fetch Verses with Translations and Arabic Text in one bulk request
     const versesRes = await fetch(
@@ -108,10 +110,12 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
       })
       .map(v => {
         const translations = {};
-        v.translations.forEach(t => {
-          if (t.resource_id === TRANSLATION_IDS.en) translations.en = cleanTranslationText(t.text);
-          else translations[secondLanguage] = cleanTranslationText(t.text);
-        });
+        if (v.translations && Array.isArray(v.translations)) {
+          v.translations.forEach(t => {
+            if (t.resource_id === TRANSLATION_IDS.en) translations.en = cleanTranslationText(t.text);
+            else translations[secondLanguage] = cleanTranslationText(t.text);
+          });
+        }
 
         return {
           surahId: parseInt(surahId),
