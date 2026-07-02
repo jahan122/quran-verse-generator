@@ -5,6 +5,7 @@
  */
 
 const BASE_URL = "https://api.quran.com/content/api/v4";
+const OLD_API_URL = "https://api.quran.com/api/v4";
 const TRANSLATION_IDS = { en: 131, id: 33, sw: 125, tr: 77, ur: 97, fr: 31, es: 83 };
 
 /**
@@ -20,16 +21,18 @@ export function cleanTranslationText(text) {
 }
 
 /**
- * Get the list of Surahs (chapters) using the content API.
+ * Get the list of Surahs (chapters) using the OLD API that was working in version 2.
+ * We keep the content API for other endpoints as requested.
  */
 export async function getSurahs() {
   try {
-    const res = await fetch(`${BASE_URL}/chapters?language=en`);
+    // Use the old API endpoint that was working in version 2
+    const res = await fetch(`${OLD_API_URL}/chapters`);
     if (!res.ok) {
       throw new Error(`Failed to fetch surahs: ${res.status} ${res.statusText}`);
     }
     const data = await res.json();
-    // The content API returns { chapters: [...] }
+    // The old API returns { chapters: [...] }
     return data.chapters.map(ch => ({
       id: ch.id,
       name: ch.name_simple,
@@ -44,7 +47,7 @@ export async function getSurahs() {
 
 /**
  * Fetch verses for a given Surah range, including translations and audio URLs.
- * Uses the content API endpoints for reliable responses.
+ * Uses the content API endpoints for audio endpoint from content API and verses endpoint from content API.
  * Returns a fallback array if anything goes wrong.
  */
 export async function fetchVerses(
@@ -77,13 +80,13 @@ export async function fetchVerses(
 
   try {
     // -------------------------------------------------
-    // 1️⃣ Parallel fetch: audio files + surah metadata (content API)
+    // 1️⃣ Parallel fetch: audio files (content API) + surah metadata (old API that works)
     // -------------------------------------------------
     const [audioRes, surahRes] = await Promise.all([
       fetch(
         `${BASE_URL}/quran/recitations/${recitationId}?chapter_number=${surahId}`
       ),
-      fetch(`${BASE_URL}/chapters/${surahId}?language=en`)
+      fetch(`${OLD_API_URL}/chapters/${surahId}`)
     ]);
 
     if (!audioRes.ok) {
@@ -121,7 +124,6 @@ export async function fetchVerses(
       `${BASE_URL}/verses/by_chapter/${surahId}` +
         `?translations=${transIds.join(",")}` +
         `&fields=text_uthmani,verse_key` +
-        `&language=en` +
         `&per_page=286&page=1`
     );
 
