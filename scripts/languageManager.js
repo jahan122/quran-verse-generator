@@ -1,8 +1,7 @@
 /**
  * @file languageManager.js
  * @description State and helper methods for handling multilingual layout adjustments
- * and font properties dynamically. Ensures Arabic and English are always present,
- * while managing active secondary translation layouts and safety fallbacks.
+ * and font properties dynamically.
  */
 
 const LANGUAGES_METADATA = {
@@ -18,8 +17,8 @@ const LANGUAGES_METADATA = {
 
 export class LanguageManager {
   constructor() {
-    this.activeSecondaryLang = 'id'; // Default secondary language
-    this.isSecondaryEnabled = true;  // Toggle secondary translation layer
+    this.activeSecondaryLang = 'id';
+    this.isSecondaryEnabled = true;
   }
 
   setSecondaryLanguage(langCode) {
@@ -35,90 +34,36 @@ export class LanguageManager {
     return false;
   }
 
-  toggleSecondaryLanguage(enabled) {
-    this.isSecondaryEnabled = !!enabled;
-  }
-
-  getActiveLanguages() {
-    const list = [
-      LANGUAGES_METADATA.ar,
-      LANGUAGES_METADATA.en
-    ];
-    if (this.isSecondaryEnabled && LANGUAGES_METADATA[this.activeSecondaryLang]) {
-      list.push(LANGUAGES_METADATA[this.activeSecondaryLang]);
-    }
-    return list;
-  }
-
-  /**
-   * Generates a safe, well-proportioned layout structure for canvas drawing or UI rendering.
-   * Auto-calculates safe font sizing modifiers based on the total text payload size
-   * to guarantee zero clipping or overflows.
-   * 
-   * @param {Object} verse The raw verse object returned by quranService
-   * @param {Object} fontConfig User font-size selections
-   * @returns {Object} Ready-to-render layout properties
-   */
   getLayoutPlan(verse, fontConfig = { arabicSize: 32, translationSize: 16 }) {
     const arabicText = verse.arabic || "";
     const englishText = verse.translations?.en || "";
     const secondaryText = this.isSecondaryEnabled ? (verse.translations?.[this.activeSecondaryLang] || "") : "";
 
-    // Count characters to adjust dynamic spacing
-    const totalChars = arabicText.length + englishText.length + secondaryText.length;
+    // Surah At-Tawbah is Surah 9. No Bismillah for it.
+    const surahId = verse.surahId || parseInt(verse.verseKey?.split(':')[0]);
+    const isAtTawbah = surahId === 9;
     
-    // Scale scaling factors dynamically
-    let scaleModifier = 1.0;
-    if (totalChars > 800) {
-      scaleModifier = 0.65;
-    } else if (totalChars > 600) {
-      scaleModifier = 0.72;
-    } else if (totalChars > 450) {
-      scaleModifier = 0.80;
-    } else if (totalChars > 300) {
-      scaleModifier = 0.88;
-    } else if (totalChars > 200) {
-      scaleModifier = 0.94;
-    }
-
-    const finalArabicSize = Math.max(16, Math.floor(fontConfig.arabicSize * scaleModifier));
-    const finalTranslationSize = Math.max(11, Math.floor(fontConfig.translationSize * scaleModifier));
-
-    // Determine line heights & gaps
-    const lineGaps = {
-      arabic: Math.floor(finalArabicSize * 0.5),
-      translation: Math.floor(finalTranslationSize * 0.45),
-      blockGap: totalChars > 300 ? 12 : 20
-    };
+    // Bismillah logic: Only show if it's the first verse of a surah AND not At-Tawbah
+    const isFirstVerse = verse.verseKey?.endsWith(":1");
+    const showBismillah = isFirstVerse && !isAtTawbah;
 
     return {
       arabic: {
         text: arabicText,
-        fontSize: finalArabicSize,
+        fontSize: fontConfig.arabicSize,
         fontFamily: 'Amiri',
-        dir: 'rtl',
-        lineGap: lineGaps.arabic
+        dir: 'rtl'
       },
       english: {
         text: englishText,
-        fontSize: finalTranslationSize,
+        fontSize: fontConfig.translationSize,
         fontFamily: 'Plus Jakarta Sans',
-        dir: 'ltr',
-        lineGap: lineGaps.translation
+        dir: 'ltr'
       },
-      secondary: secondaryText ? {
-        text: secondaryText,
-        fontSize: Math.max(10, finalTranslationSize - 1),
-        fontFamily: LANGUAGES_METADATA[this.activeSecondaryLang]?.defaultFont || 'Plus Jakarta Sans',
-        dir: LANGUAGES_METADATA[this.activeSecondaryLang]?.dir || 'ltr',
-        lineGap: lineGaps.translation,
-        label: LANGUAGES_METADATA[this.activeSecondaryLang]?.name
-      } : null,
       meta: {
         reference: `${verse.surahName} • ${verse.verseKey}`,
-        bismillah: (verse.verseKey?.endsWith(":1") || parseInt(verse.verseKey?.split(':')[0]) === 9) ? "" : "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-        totalChars,
-        scaleModifier
+        bismillah: showBismillah ? "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ" : "",
+        surahId
       }
     };
   }

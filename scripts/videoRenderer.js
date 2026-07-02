@@ -18,7 +18,7 @@ export class VideoRenderer {
     this.isRecording = false;
     this.particles = [];
     this.imageCache = {};
-    this.transitionDuration = 0.8; // seconds
+    this.transitionDuration = 0.8;
   }
 
   async getCachedImage(url) {
@@ -71,6 +71,7 @@ export class VideoRenderer {
       ctx.fillRect(0, 0, w, h);
     }
 
+    // Overlay Gradients
     const overlayColor = state.theme === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(16, 33, 30, 0.4)';
     const bottomColor = state.theme === 'light' ? 'rgba(248, 250, 252, 0.95)' : 'rgba(10, 10, 10, 0.95)';
     const overlayGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -87,37 +88,111 @@ export class VideoRenderer {
     if (state.goldenBorder) this.drawGoldenFrame(ctx, w, h);
 
     ctx.globalAlpha = opacity;
-    const layout = languageManager.getLayoutPlan(verse, { arabicSize: state.arabicSize, translationSize: state.translationSize });
+    const layout = languageManager.getLayoutPlan(verse, { 
+      arabicSize: state.arabicSize, 
+      translationSize: state.translationSize 
+    });
+    
     const scale = w / 380;
     const centerX = w / 2;
 
+    // Bismillah
+    if (layout.meta.bismillah) {
+      ctx.font = `normal ${14 * scale}px "Amiri", serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ebc153';
+      ctx.fillText(layout.meta.bismillah, centerX, h * 0.15);
+    }
+
     // Arabic
-    const arFontMap = { 'Amiri': '"Amiri", serif', 'Reem Kufi': '"Reem Kufi", sans-serif', 'Scheherazade': '"Scheherazade New", serif', 'Noto Naskh Arabic': '"Noto Naskh Arabic", serif', 'Lateef': '"Lateef", serif', 'Harmattan': '"Harmattan", sans-serif' };
+    const arFontMap = { 
+      'Amiri': '"Amiri", serif', 
+      'Reem Kufi': '"Reem Kufi", sans-serif', 
+      'Scheherazade': '"Scheherazade New", serif', 
+      'Noto Naskh Arabic': '"Noto Naskh Arabic", serif', 
+      'Lateef': '"Lateef", serif', 
+      'Harmattan': '"Harmattan", sans-serif' 
+    };
     ctx.font = `normal ${layout.arabic.fontSize * scale}px ${arFontMap[state.arabicFont] || arFontMap['Amiri']}`;
     ctx.textAlign = 'center';
     ctx.fillStyle = state.theme === 'light' ? '#1e293b' : '#fdf5df';
-    ctx.fillText(layout.arabic.text, centerX, h * 0.4);
+    
+    let displayAr = layout.arabic.text;
+    if (!state.diacritics) displayAr = displayAr.replace(/[\u064B-\u0652]/g, "");
+    
+    // Wrap Arabic Text
+    const arLines = this.wrapText(ctx, displayAr, w * 0.8);
+    let arY = h * 0.45 - (arLines.length * layout.arabic.fontSize * scale * 0.5);
+    arLines.forEach(line => {
+      ctx.fillText(line, centerX, arY);
+      arY += layout.arabic.fontSize * scale * 1.5 + (state.lineGap || 0) * scale;
+    });
 
     // Translation
-    const transFontMap = { 'Plus Jakarta Sans': '"Plus Jakarta Sans", sans-serif', 'Cinzel': '"Cinzel", serif', 'Montserrat': '"Montserrat", sans-serif', 'Playfair Display': '"Playfair Display", serif', 'Lora': '"Lora", serif', 'Georgia': 'Georgia, serif' };
+    const transFontMap = { 
+      'Plus Jakarta Sans': '"Plus Jakarta Sans", sans-serif', 
+      'Cinzel': '"Cinzel", serif', 
+      'Montserrat': '"Montserrat", sans-serif', 
+      'Playfair Display': '"Playfair Display", serif', 
+      'Lora': '"Lora", serif', 
+      'Georgia': 'Georgia, serif' 
+    };
     ctx.font = `300 ${layout.english.fontSize * scale}px ${transFontMap[state.translationFont] || transFontMap['Plus Jakarta Sans']}`;
     ctx.fillStyle = state.theme === 'light' ? '#475569' : '#cbd5e1';
-    ctx.fillText(layout.english.text, centerX, h * 0.6);
+    
+    const enLines = this.wrapText(ctx, layout.english.text, w * 0.8);
+    let enY = h * 0.65 - (enLines.length * layout.english.fontSize * scale * 0.5);
+    enLines.forEach(line => {
+      ctx.fillText(line, centerX, enY);
+      enY += layout.english.fontSize * scale * 1.45 + (state.lineGap || 0) * scale;
+    });
 
     if (state.showReference) this.drawReferenceBanner(ctx, centerX, h * 0.9, layout.meta.reference, scale);
     ctx.globalAlpha = 1.0;
+  }
+
+  wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+      const word = words[i];
+      const width = ctx.measureText(currentLine + " " + word).width;
+      if (width < maxWidth) {
+        currentLine += " " + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    lines.push(currentLine);
+    return lines;
   }
 
   drawGoldenFrame(ctx, w, h) {
     ctx.strokeStyle = 'rgba(235, 193, 83, 0.3)';
     ctx.lineWidth = w * 0.005;
     ctx.strokeRect(w * 0.03, w * 0.03, w * 0.94, h - w * 0.06);
+    
+    // Corner accents
+    const s = w * 0.05;
+    const p = w * 0.03;
+    ctx.lineWidth = w * 0.008;
+    // TL
+    ctx.beginPath(); ctx.moveTo(p, p + s); ctx.lineTo(p, p); ctx.lineTo(p + s, p); ctx.stroke();
+    // TR
+    ctx.beginPath(); ctx.moveTo(w - p - s, p); ctx.lineTo(w - p, p); ctx.lineTo(w - p, p + s); ctx.stroke();
+    // BL
+    ctx.beginPath(); ctx.moveTo(p, h - p - s); ctx.lineTo(p, h - p); ctx.lineTo(p + s, h - p); ctx.stroke();
+    // BR
+    ctx.beginPath(); ctx.moveTo(w - p - s, h - p); ctx.lineTo(w - p, h - p); ctx.lineTo(w - p, h - p - s); ctx.stroke();
   }
 
   drawReferenceBanner(ctx, x, y, ref, scale) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.beginPath(); ctx.roundRect(x - 80 * scale, y - 12 * scale, 160 * scale, 24 * scale, 12 * scale); ctx.fill();
-    ctx.fillStyle = '#ebc153'; ctx.font = `${10 * scale}px "Cinzel", serif`; ctx.fillText(ref.toUpperCase(), x, y + 4 * scale);
+    ctx.beginPath(); ctx.roundRect(x - 90 * scale, y - 15 * scale, 180 * scale, 30 * scale, 15 * scale); ctx.fill();
+    ctx.fillStyle = '#ebc153'; ctx.font = `600 ${10 * scale}px "Cinzel", serif`; ctx.fillText(ref.toUpperCase(), x, y + 4 * scale);
   }
 
   async recordVideo(state, verse, currentPlayingAudio, onProgress) {

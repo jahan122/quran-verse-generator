@@ -4,7 +4,6 @@
  */
 
 const TRANSLATION_IDS = { en: 131, id: 33, sw: 125, tr: 77, ur: 97, fr: 31, es: 83 };
-const SURAH_INFO = { 1: { name: "Al-Fatihah", arabic: "الفاتحة" }, 18: { name: "Al-Kahf", arabic: "الكهف" } };
 
 export function cleanTranslationText(text) {
   if (!text) return "";
@@ -15,9 +14,14 @@ export async function getSurahs() {
   try {
     const res = await fetch("https://api.quran.com/api/v4/chapters");
     const data = await res.json();
-    return data.chapters.map(ch => ({ id: ch.id, name: ch.name_simple, arabic: ch.name_arabic, versesCount: ch.verses_count }));
+    return data.chapters.map(ch => ({ 
+      id: ch.id, 
+      name: ch.name_simple, 
+      arabic: ch.name_arabic, 
+      versesCount: ch.verses_count 
+    }));
   } catch (e) {
-    return Object.keys(SURAH_INFO).map(id => ({ id: parseInt(id), name: SURAH_INFO[id].name, arabic: SURAH_INFO[id].arabic, versesCount: id === "18" ? 110 : 7 }));
+    return [];
   }
 }
 
@@ -38,6 +42,15 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
 
   const recitationId = RECITER_IDS[reciterName] || 7;
   const audioFilesMap = {};
+  
+  // Fetch Surah Info to get the name correctly
+  let surahName = `Surah ${surahId}`;
+  try {
+    const sRes = await fetch(`https://api.quran.com/api/v4/chapters/${surahId}`);
+    const sData = await sRes.json();
+    surahName = sData.chapter.name_simple;
+  } catch (e) {}
+
   try {
     const audioRes = await fetch(`https://api.quran.com/api/v4/quran/recitations/${recitationId}?chapter_number=${surahId}`);
     const audioData = await audioRes.json();
@@ -63,7 +76,8 @@ export async function fetchVerses(surahId, startVerse, endVerse, secondLanguage 
       }
 
       versesData.push({
-        surahName: SURAH_INFO[surahId]?.name || `Surah ${surahId}`,
+        surahId: parseInt(surahId),
+        surahName: surahName,
         verseKey: key,
         arabic: arData.verses[0].text_uthmani,
         translations: { en: cleanTranslationText(enData.translations[0].text), [secondLanguage]: secText },
