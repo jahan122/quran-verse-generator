@@ -3,21 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect } from 'react';
-import { surahCatalog } from './surahCatalog';
-import { getVerseSafe } from './quranDataStore';
+import React from 'react';
+import { surahCatalog } from './data/surahCatalog';
+import { preloadAllSurahs } from './quranStaticService';
+
+// Preload all static surah modules once when the app starts
+preloadAllSurahs().catch(err => console.warn('Failed to preload surah data', err));
 
 export default function App() {
-  useEffect(() => {
-    // Fire-and-forget background load
-    loadQuranInBackground();
-  }, []);
-
-  const handleSurahChange = (e) => {
-    const surah = parseInt(e.target.value);
-    // Handle verse selection without blocking
-  };
-
   return (
     <div>
       {/* Surah list rendered immediately from static catalog */}
@@ -29,16 +22,9 @@ export default function App() {
         ))}
       </select>
 
-      {/* Verse display with loading state */}
+      {/* Placeholder for verse display – UIController will update this */}
       <div id="verseDisplay">
-        {currentVerse ? (
-          <div>
-            <p>{currentVerse.arabic}</p>
-            <p>{currentVerse.english}</p>
-          </div>
-        ) : (
-          <p>Loading...</p>
-        )}
+        {/* Content will be injected by UIController */}
       </div>
     </div>
   );
